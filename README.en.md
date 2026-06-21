@@ -50,6 +50,51 @@ Fixing the weaknesses only touches the bottom two layers. The value layer
 
 ---
 
+## Smart routing — solved at zero tokens
+
+"Smart routing (prompt-classification-based dynamic routing)" usually means
+**asking an LLM one more time** to classify each request — "this is coding, that
+is review" — and branching on the answer. But that classification call itself
+**burns tokens**: you'd be opening a metered path just to route. That collides
+head-on with this kit's moat (no metering).
+
+The fix is **exactly the same trick** that built the moat:
+
+> Just as enforcement was moved off the LLM into a zero-token shell,
+> **classification is moved off the LLM into zero-token deterministic rules.**
+
+Instead of asking the model how to classify, the shell decides from the
+request's **observable signals**:
+
+```
+request comes in
+ └─ deterministic classifier (keywords · file extension · diff size — 0 tokens)
+     ├─ code create/edit   → Claude CLI (build)
+     ├─ review/verify ask  → codex exec (review)
+     └─ simple Q&A         → Claude only, skip Codex
+```
+
+| | LLM classification (common) | Deterministic classification (this kit) |
+|---|---|---|
+| Decision | extra call to the model | shell decides via keywords/ext/diff size |
+| Cost | tokens per classification | **0 tokens** |
+| Moat impact | adds a metered path | preserves (reinforces) the moat |
+| Reproducibility | can vary per call | same input → same branch, always |
+
+This is the **zero-token version of "prompt-classification-based dynamic
+routing."** Today SOUL.md's "Claude = build / Codex = review" is a *fixed* split;
+add one deterministic classification layer and it becomes **dynamic** — wake
+Codex only when a request needs review, skip it for simple questions. Because the
+classifier is shell, it spends no tokens, so it **reinforces** the moat by the
+same principle rather than threatening it.
+
+> Note: this is a different layer from Hermes' built-in "smart routing" (which
+> dynamically picks a *provider*). That one classifies via an LLM call and can
+> cost tokens. What's described here is **prompt-layer deterministic branching**
+> — the version that keeps billing at zero.
+
+---
+
 ## What's in the box
 
 | File | Purpose |
