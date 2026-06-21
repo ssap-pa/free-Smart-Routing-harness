@@ -1,141 +1,141 @@
+**한국어** · [English](README.en.md)
+
 # harness-kit
 
-**An opinionated, evidence-enforced, flat-rate multi-model coding protocol.**
-Build with one model, review with another — and let a *zero-token shell gate*,
-not a polite prompt, decide whether the work is actually done.
+**증거로 강제하는 정액제 멀티모델 코딩 규약.**
+한 모델로 만들고, 다른 모델로 리뷰한다 — 그리고 작업이 "정말 끝났는지"는
+정중한 프롬프트가 아니라 *토큰 0짜리 셸 게이트*가 판정한다.
 
-> Status: reference implementation / config pattern. This is a small enforcement
-> tool around a protocol, **not** a framework. That honesty is the point.
-
----
-
-## Why this exists
-
-Most "AI coding harness" repos are a pile of prompts that *ask* the model to
-behave. Models forget prose as context grows. harness-kit keeps the good ideas
-(two-model cross-review, proof-from-logs) but moves enforcement off the LLM and
-into deterministic code that **costs zero tokens to run**.
-
-### The moat: subscription auth, no metered billing
-
-Both engines authenticate through **flat-rate subscriptions**, not per-token API
-keys:
-
-| Role | Engine | Auth | Billing |
-|------|--------|------|---------|
-| Build / orchestrate | Claude (CLI) | subscription | flat-rate |
-| Review / verify | Codex (`codex exec`) | **Sign in with ChatGPT** | flat-rate |
-
-Because the enforcement and portability layers are pure shell, **fixing the
-protocol's weaknesses adds exactly $0** — there is no metered path to grow.
+> 상태: 참조 구현 / 설정 패턴. 거창한 프레임워크가 아니라 **규약을 강제하는
+> 작은 도구**다. 그 솔직함이 핵심이다.
 
 ---
 
-## Three layers
+## 왜 만들었나
+
+대부분의 "AI 코딩 하네스" 레포는 모델한테 *잘 행동해달라고 부탁하는* 프롬프트
+더미다. 모델은 컨텍스트가 길어지면 그 부탁을 잊는다. harness-kit은 좋은 아이디어
+(두 모델 교차 리뷰, 로그 물증)는 유지하되, **강제(enforcement)를 LLM에서 떼어내
+토큰 0으로 도는 결정론적 코드로 내린다.**
+
+### 해자: 구독 인증, 종량 과금 없음
+
+두 엔진 모두 토큰당 API 키가 아니라 **정액 구독**으로 인증한다:
+
+| 역할 | 엔진 | 인증 | 과금 |
+|------|------|------|------|
+| 빌드 / 오케스트레이션 | Claude (CLI) | 구독 | 정액 |
+| 리뷰 / 검증 | Codex (`codex exec`) | **ChatGPT 로그인** | 정액 |
+
+강제층과 이식층이 전부 순수 셸이라, **규약의 약점을 고치는 비용은 정확히 $0** —
+종량으로 새어나갈 경로 자체가 없다.
+
+---
+
+## 3개 레이어
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  VALUE LAYER   build + review        Claude · Codex (subs)   │  flat-rate, the moat
+│  가치층    빌드 + 리뷰        Claude · Codex (구독)          │  정액제, 해자
 ├─────────────────────────────────────────────────────────────┤
-│  ENFORCE LAYER gate + self-tests     bin/gate.sh · tests/    │  deterministic, 0 tokens
+│  강제층    게이트 + 셀프테스트  bin/gate.sh · tests/         │  결정론적, 0 토큰
 ├─────────────────────────────────────────────────────────────┤
-│  PORTABLE LAYER preflight + config   preflight.sh · *.yaml   │  env / model-agnostic
+│  이식층    프리플라이트 + 설정  preflight.sh · *.yaml        │  환경 / 모델 무관
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Fixing the weaknesses only touches the bottom two layers. The value layer
-(your subscriptions) is never changed — so it can never start metering.
+약점 수정은 아래 두 층만 건드린다. 가치층(네 구독)은 절대 바뀌지 않는다 —
+그래서 영영 종량으로 변할 수 없다.
 
 ---
 
-## What's in the box
+## 무엇이 들어있나
 
-| File | Purpose |
-|------|---------|
-| `harness.config.yaml` | single source of truth — model/provider names + gate rules |
-| `bin/gate.sh` | **the gate**: blocks "done" unless artifacts + verification + cited metrics exist |
-| `bin/preflight.sh` | checks engines are installed **and logged in on subscription auth** |
-| `tests/test_gate.sh` | self-tests the gate (breaks fake projects, asserts it blocks) |
-| `install.sh` | installs SOUL.md + the skill into a Hermes profile (backs up first, zero tokens) |
-| `hermes/SOUL.md` | drop-in identity: declares the agent an AI coding orchestrator + **forces the protocol** |
-| `hermes/skills/coding-harness-protocol/SKILL.md` | the full protocol the SOUL triggers (model routing · 12-step flow · proof rules) |
-| `docs/SKILL.en.md` | the full protocol in English |
-| `docs/INSTALL_PROMPT.md` | one-paste prompt to install via your own Hermes agent |
+| 파일 | 역할 |
+|------|------|
+| `harness.config.yaml` | 단일 진실원 — 모델/프로바이더 이름 + 게이트 규칙 |
+| `bin/gate.sh` | **게이트**: 산출물 + 검증 + 인용된 메트릭이 없으면 "완료"를 막는다 |
+| `bin/preflight.sh` | 엔진이 설치돼 있고 **구독 인증으로 로그인됐는지** 점검한다 |
+| `tests/test_gate.sh` | 게이트를 셀프테스트(가짜 프로젝트를 깨뜨려 차단을 검증) |
+| `install.sh` | SOUL.md + 스킬을 Hermes 프로파일에 설치(먼저 백업, 토큰 0) |
+| `hermes/SOUL.md` | 드롭인 정체성: 에이전트를 AI 코딩 오케스트레이터로 선언 + **규약을 강제** |
+| `hermes/skills/coding-harness-protocol/SKILL.md` | SOUL이 트리거하는 전체 규약(모델 라우팅 · 12단계 흐름 · 물증 규칙) |
+| `docs/SKILL.en.md` | 규약 전문(영문) |
+| `docs/INSTALL_PROMPT.md` | 자기 Hermes 에이전트로 설치하는 원페이스트 프롬프트 |
 | `LICENSE` | MIT |
 
 ---
 
-## Adopt it in your own Hermes
+## 내 Hermes에 적용하기
 
-Two text files do the whole job: a `SOUL.md` that **forces** the protocol on every
-coding request, and the `coding-harness-protocol` skill it triggers. `install.sh`
-drops both into your Hermes profile (backing up anything it overwrites):
+핵심은 텍스트 파일 두 개다: 모든 코딩 요청에 규약을 **강제**하는 `SOUL.md`,
+그리고 그게 트리거하는 `coding-harness-protocol` 스킬. `install.sh`가 둘 다
+Hermes 프로파일에 깔아준다(덮어쓰는 건 먼저 백업):
 
 ```bash
-git clone https://github.com/<owner>/harness-kit.git
-cd harness-kit
-./install.sh --dry-run     # preview — changes nothing
-./install.sh               # installs ~/.hermes/SOUL.md + the skill (with backups)
-./bin/preflight.sh         # confirm Claude + Codex reachable on subscription auth
+git clone https://github.com/ssap-pa/ssap-free-harness-kit.git
+cd ssap-free-harness-kit
+./install.sh --dry-run     # 미리보기 — 아무것도 안 바꿈
+./install.sh               # ~/.hermes/SOUL.md + 스킬 설치(백업 포함)
+./bin/preflight.sh         # Claude + Codex가 구독 인증으로 닿는지 확인
 ```
 
-Installing into a non-default profile:
+기본이 아닌 프로파일에 설치:
 
 ```bash
 HERMES_HOME=~/.hermes/profiles/work ./install.sh
 ```
 
-Prefer to let your agent do it? Paste the block in [`docs/INSTALL_PROMPT.md`](docs/INSTALL_PROMPT.md)
-into your Hermes chat. After install, any coding request auto-loads the protocol,
-and completion is blocked until `bin/gate.sh` passes.
+에이전트한테 시키고 싶으면 [`docs/INSTALL_PROMPT.md`](docs/INSTALL_PROMPT.md)의
+블록을 Hermes 채팅에 붙여넣어라. 설치 후에는 어떤 코딩 요청이든 규약이 자동
+로드되고, `bin/gate.sh`가 통과할 때까지 완료가 막힌다.
 
-### Prerequisites — connect these three
+### 사전조건 — 이 셋을 연결한다
 
-| Connect | Role | How |
-|---------|------|-----|
-| **Claude CLI** | build / orchestrate engine | Hermes main provider = `claude-cli` / `claude-opus-4-8` |
-| **Codex CLI** | review / verify engine | `npm i -g @openai/codex` |
-| **ChatGPT login** | the auth that powers Codex CLI | `codex login` → `codex login status` shows *Logged in using ChatGPT* |
+| 연결 | 역할 | 방법 |
+|------|------|------|
+| **Claude CLI** | 빌드 / 오케스트레이션 엔진 | Hermes 메인 프로바이더 = `claude-cli` / `claude-opus-4-8` |
+| **Codex CLI** | 리뷰 / 검증 엔진 | `npm i -g @openai/codex` |
+| **ChatGPT 로그인** | Codex CLI를 돌리는 인증 | `codex login` → `codex login status`에 *Logged in using ChatGPT* 표시 |
 
-`bin/preflight.sh` checks all three for you.
-
----
-
-## Five weaknesses → fixes (every fix is free)
-
-| # | Weakness in a prompt-only harness | Fix here | Cost |
-|---|-----------------------------------|----------|------|
-| 1 | "MUST produce X" is just a request the model can skip | `bin/gate.sh` returns **exit 1** if artifacts/verification are missing | 0 tokens |
-| 2 | Model names hardcoded everywhere → rot in months | all names live in `harness.config.yaml`; scripts read them | 0 tokens |
-| 3 | "Loads but no engine to route to" | `bin/preflight.sh` verifies install **and subscription login** | 0 tokens |
-| 4 | Korean-only docs lock out most readers | English `README.md` + `docs/SKILL.en.md` | 0 tokens |
-| 5 | The harness itself had no tests | `tests/test_gate.sh` proves the gate blocks | 0 tokens |
+`bin/preflight.sh`가 이 셋을 대신 점검해준다.
 
 ---
 
-## Quick start
+## 약점 5개 → 해결(모든 해결이 무료)
+
+| # | 프롬프트-온리 하네스의 약점 | 여기서의 해결 | 비용 |
+|---|------------------------------|----------------|------|
+| 1 | "반드시 X를 만들어라"는 모델이 건너뛸 수 있는 부탁일 뿐 | 산출물/검증이 없으면 `bin/gate.sh`가 **exit 1** 반환 | 0 토큰 |
+| 2 | 모델 이름이 곳곳에 하드코딩 → 몇 달 뒤 부패 | 모든 이름은 `harness.config.yaml`에; 스크립트가 읽음 | 0 토큰 |
+| 3 | "로드는 되는데 라우팅할 엔진이 없음" | `bin/preflight.sh`가 설치 **및 구독 로그인** 검증 | 0 토큰 |
+| 4 | 한글 전용 문서가 다수 독자를 배제 | 영문 `README.en.md` + `docs/SKILL.en.md` | 0 토큰 |
+| 5 | 하네스 자신엔 테스트가 없었음 | `tests/test_gate.sh`가 게이트의 차단을 증명 | 0 토큰 |
+
+---
+
+## 빠른 시작
 
 ```bash
-# 1. confirm engines are reachable on your subscriptions
+# 1. 엔진이 구독 인증으로 닿는지 확인
 bin/preflight.sh
 
-# 2. ... do the work: Claude builds, `codex exec` reviews, write AI_HARNESS_LOG.md + CODEX_REVIEW*.md ...
+# 2. ... 작업: Claude가 빌드, `codex exec`가 리뷰, AI_HARNESS_LOG.md + CODEX_REVIEW*.md 작성 ...
 
-# 3. gate the project before declaring "done"
-bin/gate.sh path/to/project        # exit 0 = allowed, exit 1 = blocked
+# 3. "완료" 선언 전에 프로젝트를 게이트에 통과시킴
+bin/gate.sh path/to/project        # exit 0 = 허용, exit 1 = 차단
 
-# self-test the gate any time
+# 게이트 셀프테스트는 언제든
 bash tests/test_gate.sh
 ```
 
-### Wire the gate in as a real block (recommended)
+### 게이트를 진짜 차단으로 연결하기(권장)
 
-Call `bin/gate.sh` from a pre-completion / stop hook (or CI step) so a failing
-gate actually prevents shipping — that is what turns the protocol from a request
-into a guarantee.
+`bin/gate.sh`를 완료-전/stop 훅(또는 CI 단계)에서 호출해라. 그래야 게이트
+실패가 실제로 출시를 막는다 — 이게 규약을 부탁에서 보증으로 바꾸는 지점이다.
 
 ---
 
-## License
+## 라이선스
 
-MIT — see [LICENSE](./LICENSE).
+MIT — [LICENSE](./LICENSE) 참고.
