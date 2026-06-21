@@ -36,6 +36,22 @@ billing). All metrics extracted from authoritative sources (no-hand-metrics).
 - Round 2 re-review: session 019eeba8 — 28427 tokens (~/.codex/sessions/2026/06/22/rollout-2026-06-22T04-29-02-019eeba8-64e8-77d1-bf2a-48a236129235.jsonl), exit 0
 - Outcome: 1 High + 4 Medium + 4 Low + 3 Nit raised; all High/Medium fixed; 5/5 prior issues RESOLVED on re-review; no new High/Medium.
 
+## Packaging for new Hermes users (this iteration)
+- Added: `install.sh`, `hermes/SOUL.md` (coding-orchestrator identity + forced trigger + gate clause),
+  `hermes/skills/coding-harness-protocol/SKILL.md` (Korean original, byte-for-byte copy of live skill),
+  `docs/INSTALL_PROMPT.md`; README "Adopt it in your own Hermes" + prerequisites section.
+- Verification commands & results:
+  - `bash -n install.sh` → exit 0 (syntax clean)
+  - install into throwaway `HERMES_HOME` (`--force`) → exit 0; both files present on disk
+  - 2nd install → exit 0; SOUL.md + whole skill dir backed up to `*.bak.<stamp>`
+  - missing HERMES_HOME (even `--dry-run`) → exit 1 (correctly refuses)
+  - symlinked dest → exit 1; `skills` as a file → exit 1 (both correctly refused)
+  - regression: `bash tests/test_gate.sh` → 6 passed / 0 failed; `bash bin/preflight.sh` → exit 0
+- Codex review (see CODEX_REVIEW.md Rounds 3–4):
+  - Round 3 install.sh: session 019eebc4 — 18719 tokens (~/.codex/sessions/2026/06/22/rollout-2026-06-22T04-59-54-019eebc4-a536-70b0-bce5-5297dfd31452.jsonl), exit 0
+  - Round 4 re-review: session 019eebc6 — 14965 tokens (~/.codex/sessions/2026/06/22/rollout-2026-06-22T05-01-33-019eebc6-2966-7551-9eca-626154cfed16.jsonl), exit 0
+  - Outcome: 2 High + 4 Medium + 3 Low raised; all High/Medium/relevant-Low fixed; re-review found no new High/Medium.
+
 ## Five weaknesses → fixes (all zero-token)
 1. enforcement = request → `bin/gate.sh` returns exit 1 (proven by tests)
 2. model-name rot → `harness.config.yaml` single source of truth

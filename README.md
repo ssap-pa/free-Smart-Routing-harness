@@ -56,8 +56,45 @@ Fixing the weaknesses only touches the bottom two layers. The value layer
 | `bin/gate.sh` | **the gate**: blocks "done" unless artifacts + verification + cited metrics exist |
 | `bin/preflight.sh` | checks engines are installed **and logged in on subscription auth** |
 | `tests/test_gate.sh` | self-tests the gate (breaks fake projects, asserts it blocks) |
+| `install.sh` | installs SOUL.md + the skill into a Hermes profile (backs up first, zero tokens) |
+| `hermes/SOUL.md` | drop-in identity: declares the agent an AI coding orchestrator + **forces the protocol** |
+| `hermes/skills/coding-harness-protocol/SKILL.md` | the full protocol the SOUL triggers (model routing · 12-step flow · proof rules) |
 | `docs/SKILL.en.md` | the full protocol in English |
+| `docs/INSTALL_PROMPT.md` | one-paste prompt to install via your own Hermes agent |
 | `LICENSE` | MIT |
+
+---
+
+## Adopt it in your own Hermes
+
+Two text files do the whole job: a `SOUL.md` that **forces** the protocol on every
+coding request, and the `coding-harness-protocol` skill it triggers. `install.sh`
+drops both into your Hermes profile (backing up anything it overwrites):
+
+```bash
+git clone https://github.com/<owner>/harness-kit.git
+cd harness-kit
+./install.sh --dry-run     # preview — changes nothing
+./install.sh               # installs ~/.hermes/SOUL.md + the skill (with backups)
+./bin/preflight.sh         # confirm Claude + Codex reachable on subscription auth
+```
+
+Installing into a non-default profile:
+
+```bash
+HERMES_HOME=~/.hermes/profiles/work ./install.sh
+```
+
+Prefer to let your agent do it? Paste the block in [`docs/INSTALL_PROMPT.md`](docs/INSTALL_PROMPT.md)
+into your Hermes chat. After install, any coding request auto-loads the protocol,
+and completion is blocked until `bin/gate.sh` passes.
+
+### Prerequisites
+
+- **Codex CLI** installed and signed in with ChatGPT (`codex login status` → *Logged in using ChatGPT*) — the flat-rate review engine.
+- **Hermes** main provider set to `claude-cli` / `claude-opus-4-8` — the flat-rate build engine.
+
+`bin/preflight.sh` checks both for you.
 
 ---
 
